@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+</head>
+<body>
+
+<h1>API</h1>
+
+<ul>
+<li><a href="/api/getProject">/api/getProject</a></li>
+<li><a href="/api/getProjects">/api/getProjects</a></li>
+<li><a href="/api/getProjectsCount">/api/getProjectsCount</a></li>
+<li><a href="/api/getTime">/api/getTime</a></li>
+</ul>
+
+<p>
+<a href="https://github.com/libremir" target="_blank">github.com/libremir</a>
+</p>
+
+</body>
+</html>
