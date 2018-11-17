@@ -3,14 +3,9 @@ import datetime
 import core
 
 
-def insert_project(title, description, investments, goal, status, img):
-	post1 = {"title": title, "description": description, "investments": investments, "goal": goal, "status": status, "img": img, "createDate": datetime.datetime.utcnow()}
-	return core.db.projects.insert(post1)
-
-
 class Project:
 	def insert(self):
-		insert_project(self.title, self.description, self.investments, self.goal, self.status, self.img);
+		return _insertProject(self.title, self.description, self.investments, self.goal, self.status, self.img);
 	def __init__(self, id=0, title="", description="", investments=0, goal=0, status=100, img="", createDate=0):
 		self.id = id                    # ObjectId, _id in mongo
 		self.title = title
@@ -26,7 +21,12 @@ class Project:
 
 def _apiGetProject(conn, projId):
 	projId = bytes(projId, "utf-8").decode("unicode_escape").strip().replace('"','')
-	item = core.db.projects.find_one({"_id": core.ObjectId(projId)})
+	try:
+		item = core.db.projects.find_one({"_id": core.ObjectId(projId)})
+	except Exception as e:
+		log("500 Internal Server Error: "+str(e))
+		core.sendAnswer(conn, "500 Internal Server Error: "+str(e))
+		return True
 	if item == None:
 		answer = '{}'
 	else:
@@ -43,13 +43,18 @@ def _getPostData(data):
 	return params.split("&")
 
 
-def _getProjectsCountJson(conn, addr):
+def _getProjectsCountJson(conn):
 	count = core.db.projects.find().count()
 	answer = '{"projectsCount": '+str(count)+'}'
 	core.sendAnswer(conn, typ="application/json; charset=utf-8", data=answer.encode('utf-8'))
 
 
-def _postProjectsCountJson(conn, addr):
+def _insertProject(title, description, investments, goal, status, img):
+	post1 = {"title": title, "description": description, "investments": investments, "goal": goal, "status": status, "img": img, "createDate": datetime.datetime.utcnow()}
+	return core.db.projects.insert(post1)
+
+
+def _postProjectsCountJson(conn):
 	count = core.db.projects.find().count()
 	answer = '{"projectsCount": '+str(count)+'}'
 	core.sendAnswer(conn, typ="application/json; charset=utf-8", data=answer.encode('utf-8'))
@@ -89,15 +94,17 @@ def handle(conn, method, addr, data):
 	method - GET/POST/PUT/DELETE
 	data - utf-8 string
 	"""
-	if addr.startswith("/api/project"):
+	if (addr == "/api/project") or addr.startswith("/api/project/"):
 		return handleApiProject(conn, method, addr, data)
-	if addr.startswith("/api/getProject/"):
+	if addr == "/api/projectsCount":
+		return handleApiProjectsCount(conn, method, addr, data)
+	if (addr == "/api/getProject") or addr.startswith("/api/getProject?"):
 		return handleApiGetProject(conn, method, addr, data)
-	if addr == "/api/getProjects":
+	if (addr == "/api/getProjects") or addr.startswith("/api/getProjects?"):
 		return handleApiGetProjects(conn, method, addr, data)
 	if addr == "/api/getProjectsCount":
 		return handleApiGetProjectsCount(conn, method, addr, data)
-	if addr.startswith("/api/getProjectCard/"):
+	if (addr == "/api/getProjectCard") or addr.startswith("/api/getProjectCard?"):
 		return handleApiGetProjectCard(conn, method, addr, data)
 	if addr == "/api/getProject":
 		core.sendAnswer(conn, "400 Bad Request")
@@ -108,6 +115,13 @@ def handle(conn, method, addr, data):
 def handleApiGetProject(conn, method, addr, data):
 	if method != "GET":
 		core.sendAnswer(conn, "400 Bad Request")
+		return True
+	if addr.startswith("/api/getProject?"):
+		if not addr.startswith("/api/getProject?id="):
+			log("400 Bad Request: Must id")
+			core.sendAnswer(conn, "400 Bad Request: must id")
+			return True
+		_apiGetProject(conn, addr[19:])
 		return True
 	_apiGetProject(conn, addr[15:])
 	return True
@@ -138,9 +152,9 @@ def handleApiGetProjects(conn, method, addr, data):
 
 def handleApiGetProjectsCount(conn, method, addr, data):
 	if method == "GET":
-		_getProjectsCountJson(conn, addr)
+		_getProjectsCountJson(conn)
 	elif method == "POST":
-		_postProjectsCountJson(conn, addr)
+		_postProjectsCountJson(conn)
 	else:
 		core.sendAnswer(conn, "400 Bad Request")
 	return True
@@ -187,7 +201,7 @@ def handleApiProject(conn, method, addr, data):
 			if p[0] == 'img':
 				pImg = p[1]
 			par[p[0]] = p[1]
-		pId = insert_project(pTitle, pDescription, pInvestments, pGoal, pStatus, pImg)
+		pId = _insertProject(pTitle, pDescription, pInvestments, pGoal, pStatus, pImg)
 		item = core.db.projects.find_one({"_id": core.ObjectId(pId)})
 		if item == None:
 			answer = '{}'
@@ -196,7 +210,56 @@ def handleApiProject(conn, method, addr, data):
 		core.sendAnswer(conn, typ="application/json; charset=utf-8", data=answer.encode('utf-8'))
 		return True
 	elif method == "PUT":
+		# Если указан id то обновляет информацию о проекте в формате JSON иначе возвращает ошибку 400
+		params = _getPostData(data)
+		pId = 0
+		pTitle = ""
+		pDescription = ""
+		pInvestments = ""
+		pGoal = ""
+		pStatus = ""
+		pImg = ""
+		par = {}
+		for p in params:
+			if p == "":
+				continue
+			p = p.split("=")
+			if len(p) < 2:
+				continue
+			if p[0] == 'id':
+				pId = core.ObjectId(p[1])
+			if p[0] == 'title':
+				pTitle = p[1] 
+			if p[0] == 'description':
+				pDescription = p[1] 
+			if p[0] == 'investments':
+				pInvestments = p[1] 
+			if p[0] == 'goal':
+				pGoal = p[1] 
+			if p[0] == 'status':
+				pStatus = p[1] 
+			if p[0] == 'img':
+				pImg = p[1] 
+			par[p[0]] = p[1]
+		log(par)
+		if pId == 0:
+			core.sendAnswer(conn, "400 Bad Request")
+			return True
+		#item = core.db.projects.find_one({"_id": core.ObjectId(projId)})
+		#...
+		#_apiGetProject()
+		#core.sendAnswer(conn, typ="application/json; charset=utf-8", data=answer.encode('utf-8'))
 		core.sendAnswer(conn, "400 Bad Request")
+	else:
+		core.sendAnswer(conn, "400 Bad Request")
+	return True
+
+
+def handleApiProjectsCount(conn, method, addr, data):
+	if method == "GET":
+		_getProjectsCountJson(conn)
+	elif method == "POST":
+		_postProjectsCountJson(conn)
 	else:
 		core.sendAnswer(conn, "400 Bad Request")
 	return True
