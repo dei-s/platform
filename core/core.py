@@ -45,6 +45,14 @@ def handle(conn, method, addr, data):
 	if method != "GET":
 		sendAnswer(conn, "400 Bad Request")
 		return True
+	if addr == '/core/addons':
+		answer = '<!DOCTYPE html><html><body>'
+		answer += '<h1>Addons</h1>'
+		for addonName in addons:
+			answer += '<p>'+addonName+'</p>'
+		answer += '</body></html>'
+		sendAnswer(conn, typ="text/html; charset=utf-8", data=answer.encode('utf-8'))
+		return True
 	if addr == '/core/info':
 		answer = '<!DOCTYPE html><html><body>'
 		answer += '<h1>Info</h1>'
