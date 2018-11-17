@@ -2,6 +2,8 @@ from . import addon
 from . import core
 
 Addon = addon.Addon
+ObjectId = core.db_mongo.ObjectId
+
 addons = core.addons
 addAddon = core.addAddon
 config = core.config

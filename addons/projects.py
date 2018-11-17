@@ -5,7 +5,7 @@ import core
 
 def insert_project(title, description, investments, goal, status, img):
 	post1 = {"title": title, "description": description, "investments": investments, "goal": goal, "status": status, "img": img, "createDate": datetime.datetime.utcnow()}
-	core.db.projects.insert(post1)
+	return core.db.projects.insert(post1)
 
 
 class Project:
@@ -24,7 +24,18 @@ class Project:
 
 # ==== Functions ====
 
-def getPostData(data):
+def _apiGetProject(conn, projId):
+	projId = bytes(projId, "utf-8").decode("unicode_escape").strip().replace('"','')
+	item = core.db.projects.find_one({"_id": core.ObjectId(projId)})
+	if item == None:
+		answer = '{}'
+	else:
+		answer = str(item)
+	core.sendAnswer(conn, typ="application/json; charset=utf-8", data=answer.encode('utf-8'))
+	return True
+
+
+def _getPostData(data):
 	""" Return list of string POST params
 	data - utf-8 string
 	"""
@@ -32,121 +43,19 @@ def getPostData(data):
 	return params.split("&")
 
 
-def getProjectsCountJson(conn, addr):
+def _getProjectsCountJson(conn, addr):
 	count = core.db.projects.find().count()
 	answer = '{"projectsCount": '+str(count)+'}'
 	core.sendAnswer(conn, typ="application/json; charset=utf-8", data=answer.encode('utf-8'))
 
 
-def getProjectsJson(conn, addr):
-	items = core.db.projects.find().limit(1000)
-	answer = "["
-	for item in items:
-		answer += projectItemToStr(item)
-	if answer.endswith(','):
-		answer = answer[:-1]
-	answer += ']'
-	core.sendAnswer(conn, typ="application/json; charset=utf-8", data=answer.encode('utf-8'))
-
-
-def handle(conn, method, addr, data):
-	if handleJson(conn, method, addr, data):
-		return True
-	return handleHtml(conn, method, addr)
-
-
-def handleHtml(conn, method, addr):
-	if addr.startswith("/api/getProjectCard/"):
-		projId = addr[19:]
-		projId = bytes(projId, "utf-8").decode("unicode_escape").strip().replace('"','')
-		answer = '<div class="divBlock divProjectBlockOk"><h3>'+projId+'</h3>Описание проекта<br/><font color="green">Сделано</font><br/><b>2 000 / 2 000</b></div>'
-		core.sendAnswer(conn, typ="application/json; charset=utf-8", data=answer.encode('utf-8'))
-		return True
-	return False
-
-
-def handleJson(conn, method, addr, data):
-	""" API Request handler (/api)
-	method - GET/POST/PUT/DELETE
-	data - utf-8 string
-	"""
-	if addr.startswith("/api/project/"):
-		if method == "GET":
-			projId = addr[12:]
-			projId = bytes(projId, "utf-8").decode("unicode_escape").strip().replace('"','')
-			answer = '{"id": "'+projId+'", "name":"Test"}'
-			core.sendAnswer(conn, typ="application/json; charset=utf-8", data=answer.encode('utf-8'))
-		elif method == "POST":
-			params = getPostData(data)
-			answer = '['
-			for p in params:
-				if p == "":
-					break
-				p = p.split("=")
-				if len(p) < 2:
-					break
-				answer += '{"id": "' + p[0] + '", "name": "' + p[1] + '"},'
-			if answer.endswith(","):
-				answer = answer[:-1]
-			answer += ']'
-			core.sendAnswer(conn, typ="application/json; charset=utf-8", data=answer.encode('utf-8'))
-		else:
-			core.sendAnswer(conn, "400 Bad Request")
-		return True
-
-	if addr.startswith("/api/getProject/"):
-		if method != "GET":
-			core.sendAnswer(conn, "400 Bad Request")
-			return True
-		projId = addr[15:]
-		projId = bytes(projId, "utf-8").decode("unicode_escape").strip().replace('"','')
-		answer = '{"id": "'+projId+'", "name":"Test"}'
-		core.sendAnswer(conn, typ="application/json; charset=utf-8", data=answer.encode('utf-8'))
-		return True
-	if addr == "/api/getProjects":
-		if method == "GET":
-			getProjectsJson(conn, addr)
-		elif method == "POST":
-			postProjectsJson(conn, addr, data)
-		else:
-			core.sendAnswer(conn, "400 Bad Request")
-		return True
-	if addr == "/api/getProjectsCount":
-		if method == "GET":
-			getProjectsCountJson(conn, addr)
-		elif method == "POST":
-			postProjectsCountJson(conn, addr)
-		else:
-			core.sendAnswer(conn, "400 Bad Request")
-		return True
-	if addr == "/api/getProject":
-		core.sendAnswer(conn, "400 Bad Request")
-		return True
-	return False
-
-
-def log(s):
-	print("["+__name__+"]: "+s)
-
-
-def postProjectsCountJson(conn, addr):
+def _postProjectsCountJson(conn, addr):
 	count = core.db.projects.find().count()
 	answer = '{"projectsCount": '+str(count)+'}'
 	core.sendAnswer(conn, typ="application/json; charset=utf-8", data=answer.encode('utf-8'))
 
 
-def postProjectsJson(conn, addr, data):
-	items = core.db.projects.find().limit(1000)
-	answer = "["
-	for item in items:
-		answer += projectItemToStr(item)
-	if answer.endswith(','):
-		answer = answer[:-1]
-	answer += ']'
-	core.sendAnswer(conn, typ="application/json; charset=utf-8", data=answer.encode('utf-8'))
-
-
-def projectItemToStr(item):
+def _projectItemToStr(item):
 	s = '{"id":"'+str(item["_id"])+'",'
 	if 'title' in item:
 		s += '"title":"'+str(item["title"]).replace('"','')+'",'
@@ -173,6 +82,128 @@ def projectItemToStr(item):
 			s += '"createSecond":"'+str(tt[5])+'",'
 	s = s[:-1] # remove end ,
 	return s + '},'
+
+
+def handle(conn, method, addr, data):
+	""" API Request handler (/api)
+	method - GET/POST/PUT/DELETE
+	data - utf-8 string
+	"""
+	if addr.startswith("/api/project"):
+		return handleApiProject(conn, method, addr, data)
+	if addr.startswith("/api/getProject/"):
+		return handleApiGetProject(conn, method, addr, data)
+	if addr == "/api/getProjects":
+		return handleApiGetProjects(conn, method, addr, data)
+	if addr == "/api/getProjectsCount":
+		return handleApiGetProjectsCount(conn, method, addr, data)
+	if addr.startswith("/api/getProjectCard/"):
+		return handleApiGetProjectCard(conn, method, addr, data)
+	if addr == "/api/getProject":
+		core.sendAnswer(conn, "400 Bad Request")
+		return True
+	return False
+
+
+def handleApiGetProject(conn, method, addr, data):
+	if method != "GET":
+		core.sendAnswer(conn, "400 Bad Request")
+		return True
+	_apiGetProject(conn, addr[15:])
+	return True
+
+
+def handleApiGetProjectCard(conn, method, addr, data):
+	projId = addr[19:]
+	projId = bytes(projId, "utf-8").decode("unicode_escape").strip().replace('"','')
+	answer = '<div class="divBlock divProjectBlockOk"><h3>'+projId+'</h3>Описание проекта<br/><font color="green">Сделано</font><br/><b>2 000 / 2 000</b></div>'
+	core.sendAnswer(conn, typ="application/json; charset=utf-8", data=answer.encode('utf-8'))
+	return True
+
+
+def handleApiGetProjects(conn, method, addr, data):
+	if (method == "GET") or (method == "POST"):
+		items = core.db.projects.find().limit(1000)
+		answer = "["
+		for item in items:
+			answer += _projectItemToStr(item)
+		if answer.endswith(','):
+			answer = answer[:-1]
+		answer += ']'
+		core.sendAnswer(conn, typ="application/json; charset=utf-8", data=answer.encode('utf-8'))
+	else:
+		core.sendAnswer(conn, "400 Bad Request")
+	return True
+
+
+def handleApiGetProjectsCount(conn, method, addr, data):
+	if method == "GET":
+		_getProjectsCountJson(conn, addr)
+	elif method == "POST":
+		_postProjectsCountJson(conn, addr)
+	else:
+		core.sendAnswer(conn, "400 Bad Request")
+	return True
+
+
+def handleApiProject(conn, method, addr, data):
+	if method == "GET":
+		# Возвращает информацию о проекте в формате JSON
+		_apiGetProject(conn, addr[13:])
+	elif method == "POST":
+		log("handleApiProject POST "+addr)
+		# Добавляет новый проект. Если указан id то возвращает ошибку 400.
+		params = _getPostData(data)
+		pId = addr[13:]
+		if pId != "":
+			core.sendAnswer(conn, "400 Bad Request")
+			return True
+		pTitle = ""
+		pDescription = ""
+		pInvestments = ""
+		pGoal = ""
+		pStatus = ""
+		pImg = ""
+		par = {}
+		for p in params:
+			if p == "":
+				continue
+			p = p.split("=")
+			if len(p) < 2:
+				continue
+			if p[0] == 'id':
+				core.sendAnswer(conn, "400 Bad Request")
+				return True
+			if p[0] == 'title':
+				pTitle = p[1]
+			if p[0] == 'description':
+				pDescription = p[1]
+			if p[0] == 'investments':
+				pInvestments = p[1]
+			if p[0] == 'goal':
+				pGoal = p[1]
+			if p[0] == 'status':
+				pStatus = p[1]
+			if p[0] == 'img':
+				pImg = p[1]
+			par[p[0]] = p[1]
+		pId = insert_project(pTitle, pDescription, pInvestments, pGoal, pStatus, pImg)
+		item = core.db.projects.find_one({"_id": core.ObjectId(pId)})
+		if item == None:
+			answer = '{}'
+		else:
+			answer = str(item)
+		core.sendAnswer(conn, typ="application/json; charset=utf-8", data=answer.encode('utf-8'))
+		return True
+	elif method == "PUT":
+		core.sendAnswer(conn, "400 Bad Request")
+	else:
+		core.sendAnswer(conn, "400 Bad Request")
+	return True
+
+
+def log(s):
+	print("["+__name__+"]: "+s)
 
 
 core.addAddon(core.Addon(__name__, handle))

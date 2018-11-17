@@ -1,3 +1,4 @@
+import bson.objectid
 import pymongo
 
 import conf
@@ -7,6 +8,7 @@ import conf
 
 client = pymongo.MongoClient("localhost", 27017)
 db = client.mhd_1
+ObjectId = bson.objectid.ObjectId
 
 
 # ==== Functions ====
