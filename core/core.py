@@ -5,6 +5,14 @@ from . import db_mongo
 from . import fs
 
 
+# ==== addons ====
+
+addons = {}
+
+def addAddon(addon):
+	addons[addon.name] = addon
+
+
 # ==== version ====
 
 from collections import namedtuple
@@ -32,6 +40,42 @@ else:
 
 
 # ==== functions ====
+
+def handle(conn, method, addr, data):
+	if method != "GET":
+		sendAnswer(conn, "400 Bad Request")
+		return True
+	if addr == '/core/info':
+		answer = '<!DOCTYPE html><html><body>'
+		answer += '<h1>Info</h1>'
+		answer += '<p>core.config</p>'
+		for confName in config:
+			answer += '<p>'+confName+'='+str(config[confName])+'</p>'
+		answer += '</body></html>'
+		sendAnswer(conn, typ="text/html; charset=utf-8", data=answer.encode('utf-8'))
+		return True
+	return False
+
+
+def handleRecv(conn, addr, data):
+	udata = data.decode("utf-8")
+	# take only the first line
+	udata2 = udata.split("\r\n", 1)[0]
+	# we divide our line by spaces
+	method, address, protocol = udata2.split(" ", 2)
+	print(addr, protocol, method, address)
+	if not protocol.startswith("HTTP/1"):
+		return    # do not process
+	if (len(address) < 1) or (address[0] != '/'):
+		address = "/" + address
+	if handle(conn, method, address, udata):
+		return
+	if address == '/':
+		address = '/index.html'
+	for addonName in addons:
+		if addons[addonName].handle(conn, address, method, udata):
+			break
+
 
 def sendAnswer(conn, status="200 OK", typ="text/plain; charset=utf-8", data=b"", maxage=0):
 	conn.send(b"HTTP/1.1 " + status.encode("utf-8") + b"\r\n")
