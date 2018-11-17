@@ -11,9 +11,9 @@ if 'STATIC_DIR' in dir(conf):
 	if len(conf.STATIC_DIR) > 0 and conf.STATIC_DIR.startswith("/"):
 		STATIC_DIR = conf.STATIC_DIR
 	else:
-		STATIC_DIR = os.path.dirname(__file__)+'/../'+conf.STATIC_DIR
+		STATIC_DIR = os.path.dirname(__file__)+'/../../'+conf.STATIC_DIR
 else:
-	STATIC_DIR = os.path.dirname(__file__)+'/../http_static'
+	STATIC_DIR = os.path.dirname(__file__)+'/../../http_static'
 
 if len(sys.argv) > 2:
 	if sys.argv[1] == "--staticdir":
