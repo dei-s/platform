@@ -26,7 +26,6 @@ core.config['STATIC_DIR'] = STATIC_DIR
 # ==== Functions ====
 
 def handle(conn, addr, method, data):
-	log(method + " " + addr)
 	if method != "GET":
 		core.sendAnswer(conn, typ="400 Bad Request")
 		return False
@@ -92,8 +91,3 @@ def handle(conn, addr, method, data):
 
 def log(s):
 	print('['+__name__+']: '+s)
-
-
-# ==== Addon ====
-
-core.addAddon(core.Addon(__name__, handle))
