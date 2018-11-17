@@ -25,7 +25,7 @@ core.config['STATIC_DIR'] = STATIC_DIR
 
 # ==== Functions ====
 
-def handle(conn, addr, method, data):
+def handle(conn, method, addr, data):
 	if method != "GET":
 		core.sendAnswer(conn, typ="400 Bad Request")
 		return False
