@@ -6,6 +6,10 @@ import sys
 
 import conf
 import core
+from addons import dreams
+from addons import dreams_test
+from addons import needs
+from addons import needs_test
 from addons import projects
 from addons import projects_test
 from addons import time
