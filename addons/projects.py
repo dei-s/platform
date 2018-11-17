@@ -49,24 +49,23 @@ def getProjectsJson(conn, addr):
 	core.sendAnswer(conn, typ="application/json; charset=utf-8", data=answer.encode('utf-8'))
 
 
-def handle(conn, addr, method, data):
-	if handleJson(conn, addr, method, data):
+def handle(conn, method, addr, data):
+	if handleJson(conn, method, addr, data):
 		return True
-	return handleHtml(conn, addr, method)
+	return handleHtml(conn, method, addr)
 
 
-def handleHtml(conn, addr, method):
+def handleHtml(conn, method, addr):
 	if addr.startswith("/api/getProjectCard/"):
 		projId = addr[19:]
 		projId = bytes(projId, "utf-8").decode("unicode_escape").strip().replace('"','')
-		log(projId)
 		answer = '<div class="divBlock divProjectBlockOk"><h3>'+projId+'</h3>Описание проекта<br/><font color="green">Сделано</font><br/><b>2 000 / 2 000</b></div>'
 		core.sendAnswer(conn, typ="application/json; charset=utf-8", data=answer.encode('utf-8'))
 		return True
 	return False
 
 
-def handleJson(conn, addr, method, data):
+def handleJson(conn, method, addr, data):
 	""" API Request handler (/api)
 	method - GET/POST/PUT/DELETE
 	data - utf-8 string
@@ -101,7 +100,6 @@ def handleJson(conn, addr, method, data):
 			return True
 		projId = addr[15:]
 		projId = bytes(projId, "utf-8").decode("unicode_escape").strip().replace('"','')
-		log(projId)
 		answer = '{"id": "'+projId+'", "name":"Test"}'
 		core.sendAnswer(conn, typ="application/json; charset=utf-8", data=answer.encode('utf-8'))
 		return True

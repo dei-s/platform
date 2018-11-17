@@ -3,7 +3,7 @@ import time
 import core
 
 
-def handle(conn, addr, method, data):
+def handle(conn, method, addr, data):
 	if method != "GET":
 		return False
 	if addr != "/api/getTime":

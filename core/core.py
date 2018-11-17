@@ -81,7 +81,7 @@ def handleRecv(conn, addr, data):
 	if address == '/':
 		address = '/index.html'
 	for addonName in addons:
-		if addons[addonName].handle(conn, address, method, udata):
+		if addons[addonName].handle(conn, method, address, udata):
 			break
 
 

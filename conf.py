@@ -8,4 +8,4 @@ PORT = 1400
 STATIC_DIR = 'http_static'
 # Maximum file size in response
 MAX_FILE_SIZE = 10000000
-SERVER_NAME = "Platform 0.1.0"
+SERVER_NAME = "Platform 0.1.1"
