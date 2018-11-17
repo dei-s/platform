@@ -42,7 +42,7 @@ else:
 # ==== functions ====
 
 def handle(conn, method, addr, data):
-	if method != "GET":
+	if addr.startswith('/core/') and (method != "GET"):
 		sendAnswer(conn, "400 Bad Request")
 		return True
 	if addr == '/core/addons':
