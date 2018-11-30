@@ -1,11 +1,12 @@
 import hashlib
 import axolotl_curve25519 as curve
-import base58 # https://github.com/keis/base58
 import os
 from math import log
 from operator import xor
 from copy import deepcopy
 import functools
+
+import base58 # https://github.com/keis/base58
 
 
 if bytes == str:  # python2
@@ -258,7 +259,7 @@ def sha256(s):
 
 def hashChain(s):
 	a = hashlib.blake2b(s, digest_size=32).digest()
-	b=keccak256.digest(a)
+	b = keccak256.digest(a)
 	return b
 
 def sign(privateKey, message):
