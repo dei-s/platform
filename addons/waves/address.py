@@ -246,9 +246,9 @@ class Address(object):
 	def balance(self, assetId='', confirmations=0):
 		try:
 			if assetId:
-				return waves.wrapper('/assets/balance/%s/%s' % (self.address.decode('ascii'), assetId))['balance']
+				return waves.wrapper('/assets/balance/%s/%s' % (self.address, assetId))['balance']
 			else:
-				return waves.wrapper('/addresses/balance/%s%s' % (self.address.decode('ascii'), '' if confirmations==0 else '/%d' % confirmations))['balance']
+				return waves.wrapper('/addresses/balance/%s%s' % (self.address, '' if confirmations==0 else '/%d' % confirmations))['balance']
 		except:
 			return 0
 
