@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+</head>
+<body>
+
+<h1>Test Waves</h1>
+
+
+<h2>TokenIds</h2>
+
+<p>
+8Wj49jM8y9qfFx2QG6HxQXbiaxdnTt8EGm8mEqXJWFL4 - DEIP
+<br/>
+8qqoeygkNFqSjqf8JrB1LtzkCPTS3zJPe3LHDotTJvdH - Libre
+<br/>
+9mjqiLEjDD3U1Q4CXTGtqitDGqC84QChkuEUp2TLBjCW - LibreMoney
+<br/>
+7Mav2hn42x8RRJoftmBNK8WLb4nRCRB21Z6yLKmocAwh - LibrePlatform
+</p>
+
+<p>
+H2Q2sTDaMGfYrVY5x8R3f1NUC13BgtWLTeykzfTrEgLq - Григорий Слынько
+<br/>
+HZjK697zLbTE3SPJEypRqZDDJD4zkP6HTxW4wBVbKU1Q - Мария Парамонова
+<br/>
+96Ayvy9nYg8kRAPHE4fjPhnewmMLxRc7YiZD3bAnwZzj - Роман Иноземцев
+<br/>
+8LnR5BZBQeZwcxmBTcsASX7vfcvx3eCLgPPZsVaBEAT5 - Ярослав Логинов
+<br/>
+FT53uBnaSt9bE2jpxwEJBzKbPyE9TaDgBAethmHg1uR - Данил Дашкевич
+</p>
+
+<div id="app">
+/api/waves/height - get blockchain height = {{ wavesHeight }}
+</div>
+
+<script src="js/jquery.min.js"></script>
+<script src="js/vue.js"></script>
+<script src="js/axios.js"></script>
+
+<script>
+function r(data){
+	$.each(data, function(key2, val2){
+		if (key2 == "height") {
+			app.wavesHeight = val2;
+			setTimeout(app.refreshHeight, 10000);
+		}
+	})
+}
+
+app = new Vue({
+	el: '#app',
+	data: {
+		wavesHeight: ""
+	},
+	mounted() {
+		setTimeout(this.refreshHeight, 500);
+	},
+	methods: {
+		refreshHeight: function(){
+			app.wavesHeight = "";
+			axios
+				.get('/api/waves/height')
+				.then(response => (
+					$.each(response, function(key, val){
+						if (key == "data") {
+							r(val);
+						}
+					})
+				));
+		}
+	}
+});
+</script>
+
+
+</body>
+</html>
