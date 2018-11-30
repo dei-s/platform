@@ -1,7 +1,7 @@
 import core
 
 
-def handle(conn, method, addr, data):
+def handleHttp(conn, method, addr, data):
 	if method != "GET":
 		return False
 	if addr != "/test/dreams":
@@ -23,4 +23,8 @@ def handle(conn, method, addr, data):
 	return True
 
 
-core.addAddon(core.Addon(__name__, handle))
+def handleMessage(msg):
+	return False
+
+
+core.addAddon(core.Addon(__name__, handleHttp, handleMessage))

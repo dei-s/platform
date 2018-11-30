@@ -3,6 +3,7 @@ import os
 import conf
 from . import db_mongo
 from . import fs
+from . import protocol
 
 
 # ==== addons ====
@@ -41,6 +42,21 @@ else:
 
 # ==== functions ====
 
+def getHttpData(strdata):
+	""" Return list of string POST params
+	strdata - utf-8 string
+	"""
+	params = strdata.split("\r\n\r\n")[1]
+	return params.split("&")
+
+def getHttpHeader(strdata):
+	""" Return list of string POST params
+	strdata - utf-8 string
+	"""
+	params = strdata.split("\r\n\r\n")[0]
+	return params.split("\r\n")
+
+
 def handle(conn, method, addr, data):
 	if addr.startswith('/core/') and (method != "GET"):
 		sendAnswer(conn, "400 Bad Request")
@@ -65,6 +81,36 @@ def handle(conn, method, addr, data):
 	return False
 
 
+def handleMessage(msg):
+	print(msg)
+	if msg[v] != 1:
+		return False
+	return handleMessage1(msg['mt'], msg['of'], msg['to'], msg['data'])
+
+
+def handleMessage1(mt, of, to, data):
+	'''
+	mt - message type. See protocol.MessageType
+	of - from
+	'''
+	print('mt:', mt, ' of:', of, ' to:', to)
+	if to.startswith("a:"):
+		addonName = to[2:]
+		try:
+			msg = {}
+			msg['v'] = 1
+			msg['mt'] = mt
+			msg['of'] = of
+			msg['to'] = to
+			msg['data'] = data
+			addons[addonName].handleMessage(msg)
+			print(333)
+		except Exception as e:
+			print('Exception:', e)
+			return False
+	return True
+
+
 def handleRecv(conn, addr, data):
 	udata = data.decode("utf-8")
 	# take only the first line
@@ -81,7 +127,7 @@ def handleRecv(conn, addr, data):
 	if address == '/':
 		address = '/index.html'
 	for addonName in addons:
-		if addons[addonName].handle(conn, method, address, udata):
+		if addons[addonName].handleHttp(conn, method, address, udata):
 			break
 
 
@@ -130,7 +176,3 @@ def sendAnswerFile(conn, fn, typ="image/png"):
 		sendAnswer(conn, "500 Internal Server Error")
 		print(e)
 	return r
-
-
-def log(s):
-	print("[core]: " + s)

@@ -1,7 +1,7 @@
 import core
 
 
-def handle(conn, method, addr, data):
+def handleHttp(conn, method, addr, data):
 	if method != "GET":
 		return False
 	if addr != "/test/projects":
@@ -23,8 +23,8 @@ def handle(conn, method, addr, data):
 	return True
 
 
-def log(s):
-	print("["+__name__+"]: "+s)
+def handleMessage(msg):
+	return False
 
 
-core.addAddon(core.Addon(__name__, handle))
+core.addAddon(core.Addon(__name__, handleHttp, handleMessage))

@@ -62,7 +62,7 @@ def _dreamItemToStr(item):
 	return s + '},'
 
 
-def handle(conn, method, addr, data):
+def handleHttp(conn, method, addr, data):
 	""" API Request handler (/api)
 	method - GET/POST/PUT/DELETE
 	data - utf-8 string
@@ -210,8 +210,12 @@ def handleApiDream(conn, method, addr, data):
 	return True
 
 
+def handleMessage(msg):
+	return False
+
+
 def log(s):
 	print("["+__name__+"]: "+s)
 
 
-core.addAddon(core.Addon(__name__, handle))
+core.addAddon(core.Addon(__name__, handleHttp, handleMessage))

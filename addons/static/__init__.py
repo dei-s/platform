@@ -1,4 +1,4 @@
 import core
 from . import static
 
-core.addAddon(core.Addon(__name__, static.handle))
+core.addAddon(core.Addon(__name__, static.handleHttp, static.handleMessage))

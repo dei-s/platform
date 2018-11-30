@@ -27,7 +27,7 @@ core.config['STATIC_DIR'] = STATIC_DIR
 
 # ==== Functions ====
 
-def handle(conn, method, addr, data):
+def handleHttp(conn, method, addr, data):
 	if method != "GET":
 		core.sendAnswer(conn, typ="400 Bad Request: Static files must GET")
 		return False
@@ -39,6 +39,5 @@ def handle(conn, method, addr, data):
 	else:
 		core.sendAnswerFile(conn, STATIC_DIR + addr, "text/plain");
 
-
-def log(s):
-	print('['+__name__+']: '+s)
+def handleMessage(msg):
+	return False
