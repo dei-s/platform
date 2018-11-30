@@ -99,7 +99,6 @@ def handle(conn, method, addr, data):
 
 
 def handleMessage(msg):
-	print(msg)
 	if msg[v] != 1:
 		return False
 	return handleMessage1(msg['mt'], msg['of'], msg['to'], msg['data'])
@@ -110,20 +109,15 @@ def handleMessage1(mt, of, to, data):
 	mt - message type. See protocol.MessageType
 	of - from
 	'''
-	print('mt:', mt, ' of:', of, ' to:', to)
 	if to.startswith("a:"):
 		addonName = to[2:]
-		try:
-			msg = {}
-			msg['v'] = 1
-			msg['mt'] = mt
-			msg['of'] = of
-			msg['to'] = to
-			msg['data'] = data
-			addons[addonName].handleMessage(msg)
-		except Exception as e:
-			print('Exception:', e)
-			return False
+		msg = {}
+		msg['v'] = 1
+		msg['mt'] = mt
+		msg['of'] = of
+		msg['to'] = to
+		msg['data'] = data
+		addons[addonName].handleMessage(msg)
 	return True
 
 
