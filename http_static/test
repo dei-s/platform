@@ -8,12 +8,17 @@
 <h1>TEST</h1>
 
 <ul>
+<li><a href="/test_waves">/test_waves</a></li>
+</ul>
+
+<ul>
 <li><a href="/test/projects">/test/projects</a></li>
 <li><a href="/test/time">/test/time</a></li>
+<li><a href="/test/waves">/test/waves</a></li>
 </ul>
 
 <p>
-<a href="https://github.com/libremir" target="_blank">github.com/libremir</a>
+<a href="https://github.com/dei-s" target="_blank">github.com/dei-s</a>
 </p>
 
 </body>
