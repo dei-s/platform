@@ -1,5 +1,5 @@
-import waves
 import logging
+from . import waves
 
 class Asset(object):
 	def __init__(self, assetId):

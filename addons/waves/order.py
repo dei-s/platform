@@ -1,4 +1,4 @@
-import waves
+from . import waves
 
 class Order(object):
 	def __init__(self, orderId, assetPair, address = ''):

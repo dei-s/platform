@@ -1,15 +1,17 @@
 import math
-import waves
 import axolotl_curve25519 as curve
 import os
-import waves.crypto as crypto
 import time
 import struct
 import json
-import base58
 import base64
 import logging
 import requests
+
+import base58
+
+from . import crypto
+from . import waves
 
 wordList = ['abandon', 'ability', 'able', 'about', 'above', 'absent', 'absorb', 'abstract', 'absurd', 'abuse', 'access',
 			'accident', 'account', 'accuse', 'achieve', 'acid', 'acoustic', 'acquire', 'across', 'act', 'action',
