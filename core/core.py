@@ -14,6 +14,11 @@ def addAddon(addon):
 	addons[addon.name] = addon
 
 
+# ==== connection ====
+
+connection = {}
+
+
 # ==== version ====
 
 from collections import namedtuple
@@ -43,17 +48,29 @@ else:
 # ==== functions ====
 
 def getHttpData(strdata):
-	""" Return list of string POST params
+	""" Return named list HTTP POST params
 	strdata - utf-8 string
 	"""
-	params = strdata.split("\r\n\r\n")[1]
-	return params.split("&")
+	res = {}
+	pp = strdata.split("\r\n\r\n")
+	if len(pp) < 2:
+		return res
+	params = pp[1].split("&")
+	for p in params:
+		v = p.split('=')
+		if len(v) > 1:
+			res[v[0]] = v[1]
+	return res
+
 
 def getHttpHeader(strdata):
-	""" Return list of string POST params
+	""" Return array of string HTTP HEAD params
 	strdata - utf-8 string
 	"""
-	params = strdata.split("\r\n\r\n")[0]
+	pp = strdata.split("\r\n\r\n")
+	if len(pp) < 1:
+		return []
+	params = pp[0]
 	return params.split("\r\n")
 
 
@@ -104,7 +121,6 @@ def handleMessage1(mt, of, to, data):
 			msg['to'] = to
 			msg['data'] = data
 			addons[addonName].handleMessage(msg)
-			print(333)
 		except Exception as e:
 			print('Exception:', e)
 			return False
@@ -112,11 +128,17 @@ def handleMessage1(mt, of, to, data):
 
 
 def handleRecv(conn, addr, data):
+	connection['conn'] = conn
+	connection['addr'] = addr
+	connection['data'] = data
 	udata = data.decode("utf-8")
 	# take only the first line
 	udata2 = udata.split("\r\n", 1)[0]
 	# we divide our line by spaces
 	method, address, protocol = udata2.split(" ", 2)
+	connection['method'] = method
+	connection['address'] = address
+	connection['protocol'] = protocol
 	print(addr, protocol, method, address)
 	if not protocol.startswith("HTTP/1"):
 		return    # do not process

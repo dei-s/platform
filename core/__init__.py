@@ -7,6 +7,7 @@ ObjectId = core.db_mongo.ObjectId
 addons = core.addons
 addAddon = core.addAddon
 config = core.config
+connection = core.connection
 db = core.db_mongo.db
 getHttpData = core.getHttpData
 getHttpHeader = core.getHttpHeader
