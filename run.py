@@ -15,6 +15,7 @@ from addons import projects_test
 from addons import time
 from addons import time_test
 from addons import waves
+from addons import waves_addresses
 from addons import waves_test
 # Static addon must be the last. If previous addons have not processed the request, then search in static files.
 from addons import static
